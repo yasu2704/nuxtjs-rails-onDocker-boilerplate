@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+cp .env.dev.sample .env.dev
+docker-compose build
+
+# Nuxt.js Setup
+docker-compose run --rm front vue init nuxt-community/starter-template .
+sed -i ".bak" -e 's/"dev": "nuxt"/"dev": "HOST=0.0.0.0 PORT=3333 nuxt"/g' package.json
+rm -rf package.json.bak
+docker-compose run --rm front yarn
+mv .gitignore .gitignore.bak
+
+# Rails Setup
+docker-compose run --rm rails bundle exec rails new . --force --api --database=postgresql
+cp -f template/database.yml config/database.yml
+docker-compose run --rm rails bundle exec spring binstub --all
+cat .gitignore.bak >> .gitignore
+rm -rf .gitignore.bak
